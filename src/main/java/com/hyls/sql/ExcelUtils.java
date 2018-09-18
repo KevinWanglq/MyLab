@@ -5,8 +5,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -48,6 +56,51 @@ public class ExcelUtils {
 		sp.setColNames(colNames);
 		
 		generateInsertSql(f, outputFile, sp);
+	}
+	
+	public static List<String> getContentByIndex(File inputFile, int sheetNo,int colIndex){
+		List<String> list = new ArrayList<String>();
+		HSSFWorkbook xwb = null;
+		try {
+		    xwb = new HSSFWorkbook(new FileInputStream(inputFile));
+			HSSFSheet sheet = xwb.getSheetAt(sheetNo);
+			HSSFRow row = null;
+			HSSFCell cell = null;
+			int rowStart =sheet.getFirstRowNum();
+			int rowEnd = sheet.getPhysicalNumberOfRows();
+			
+			/*for (int i = 0; i < sheet.getNumMergedRegions(); i++) {
+		        CellRangeAddress region = sheet.getMergedRegion(i); // 
+		        int colIndex1 = region.getFirstColumn();             // 合并区域首列位置
+		        int rowNum = region.getFirstRow();                     // 合并区域首行位置
+		        System.out.println("第[" + i + "]个合并区域：" +"rowNum :"+rowNum+ "colIndex1"+colIndex1+" " +sheet.getRow(rowNum).getCell(colIndex1).getStringCellValue());
+		    }*/
+			for (int i = rowStart+1; i <rowEnd; i++) {
+				row = sheet.getRow(i);
+				if(row==null) {
+					continue;
+				}
+				cell = row.getCell(colIndex);
+				if(cell ==null) {
+					continue;
+				}
+				cell.setCellType(CellType.STRING);
+				list.add(cell.getStringCellValue());
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			if(xwb!=null) {
+				try {
+					xwb.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return list;
 	}
 	
 	public static void generateInsertSql(File inputFile,File outputFile,SqlPart sp) {
@@ -115,7 +168,25 @@ public class ExcelUtils {
 		}
 	}
 
-	
+	/**   
+	* 获取单元格的值   
+	* @param cell   
+	* @return   
+	*/    
+	public String getCellValue(Cell cell){    
+	    if(cell == null) return "";    
+	    if(cell.getCellType() == Cell.CELL_TYPE_STRING){    
+	        return cell.getStringCellValue();    
+	    }else if(cell.getCellType() == Cell.CELL_TYPE_BOOLEAN){    
+	        return String.valueOf(cell.getBooleanCellValue());    
+	    }else if(cell.getCellType() == Cell.CELL_TYPE_FORMULA){    
+	        return cell.getCellFormula() ;    
+	    }else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){    
+	        return String.valueOf(cell.getNumericCellValue());    
+	    }
+	    return "";    
+	}
+
 	/*private static StringBuffer buildSql(StringBuffer sql, String value,ColType type) {
 		switch (type) {
 		case String:
