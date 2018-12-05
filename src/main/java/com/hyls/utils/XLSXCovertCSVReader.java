@@ -457,8 +457,8 @@ public class XLSXCovertCSVReader {
 	public static void main(String[] args) throws Exception {
 		List<String[]> list = XLSXCovertCSVReader
 				.readerExcel(
-						"F:\\test.xlsx",
-						"Sheet1", 17);
+						"F:\\work\\开发文档\\标准化文档-20181031\\数据标准化拆分-大总帐-发布版.xls",
+						"标准化字段", 15);
 		for (String[] record : list) {
 			for (String cell : record) {
 				System.out.print(cell + "  ");
