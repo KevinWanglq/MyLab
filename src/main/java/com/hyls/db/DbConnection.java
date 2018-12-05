@@ -21,6 +21,8 @@ public class DbConnection {
 	private static String username = "root";
 	private static String password = "mystar?92";
 	private static HashMap<String, String> moduleMap= new HashMap<String, String>(); 
+	//private static HashMap<String, String> mnamePkMap = new HashMap<String, String>();
+	
 	private static HashMap<String, String> tabMap= new HashMap<String, String>(); 
 	private static void initModuleCache() {
 		 PreparedStatement pstmt = null;
@@ -36,6 +38,9 @@ public class DbConnection {
 				if(!moduleMap.containsKey(sysid)) {
 					moduleMap.put(sysid, pk);
 				}
+				/*if(!mnamePkMap.containsKey(name)) {
+					mnamePkMap.put(name, pk);
+				}*/
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -72,6 +77,15 @@ public class DbConnection {
 			e.printStackTrace();
 		}
 	}
+	
+	/*public static String getModulePkByName(String name) {
+		if(!isInit) {
+			initModuleCache();
+			initTableCache();
+			isInit = true;
+		}
+		return mnamePkMap.get(name);
+	}*/
 	
 	public static String getModulePk(String sysid) {
 		if(!isInit) {

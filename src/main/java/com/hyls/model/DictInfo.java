@@ -75,7 +75,7 @@ public class DictInfo {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "pk; "+ this.pk+" dict_key: "+dictKey+" dict_value: "+dictValue+" col code"+colCode+" col_pk: "+colPk+" module:"+module+" module code:"+ modCode;
+		return "pk; "+ this.pk+" dict_key: "+dictKey+" dict_value: "+dictValue+" tab pk: "+tabPk+" col code: "+colCode+" col_pk: "+colPk+" module:"+module+" module code:"+ modCode;
 	}
 	
 }

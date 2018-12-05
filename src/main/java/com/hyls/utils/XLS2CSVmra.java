@@ -1,6 +1,5 @@
 package com.hyls.utils;
 
-import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.File;
 
@@ -26,7 +25,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.sql.SQLNonTransientConnectionException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,13 +32,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.eventusermodel.EventWorkbookBuilder.SheetRecordCollectingListener;
 import org.apache.poi.hssf.eventusermodel.FormatTrackingHSSFListener;
 import org.apache.poi.hssf.eventusermodel.HSSFEventFactory;
 import org.apache.poi.hssf.eventusermodel.HSSFListener;
 import org.apache.poi.hssf.eventusermodel.HSSFRequest;
 import org.apache.poi.hssf.eventusermodel.MissingRecordAwareHSSFListener;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.eventusermodel.EventWorkbookBuilder.SheetRecordCollectingListener;
 import org.apache.poi.hssf.eventusermodel.dummyrecord.LastCellOfRowDummyRecord;
 import org.apache.poi.hssf.eventusermodel.dummyrecord.MissingCellDummyRecord;
 import org.apache.poi.hssf.model.HSSFFormulaParser;
@@ -59,7 +57,6 @@ import org.apache.poi.hssf.record.SSTRecord;
 import org.apache.poi.hssf.record.StringRecord;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-
 
 import com.hyls.db.DbConnection;
 import com.hyls.model.ColumnInfo;
@@ -367,6 +364,9 @@ public class XLS2CSVmra implements HSSFListener {
 			for (File file : files) {
 				System.out.println("handling " + file.getName());
 				String fileName = file.getName();
+				if("省联社源系统联系人.xlsx".equals(fileName)) {
+					continue;
+				}
 				String[] strs = StringUtils.split(fileName, ".");
 				XLS2CSVmra xls2csv = new XLS2CSVmra(new POIFSFileSystem(new FileInputStream(file.getAbsolutePath())),
 						new PrintStream(new File("F:\\work\\开发文档\\bzhcsv\\" + strs[0] + ".txt")), 15);
@@ -456,7 +456,7 @@ public class XLS2CSVmra implements HSSFListener {
 										
 										TableInfo tableInfo = new TableInfo();
 										tableInfo.setPk(tabId);
-										tableInfo.setSourceSyspk(moduleMap.get(strings[0].trim()));
+										tableInfo.setSourceSyspk(DbConnection.getModulePk(strings[0].trim()));
 										tableInfo.setTableCode(strings[1].trim());
 										if (strings[2].length() > 32) {
 											tableInfo.setTableName(strings[2].trim().substring(0, 32));
@@ -475,7 +475,7 @@ public class XLS2CSVmra implements HSSFListener {
 									
 									TableInfo tableInfo = new TableInfo();
 									tableInfo.setPk(tabId);
-									tableInfo.setSourceSyspk(moduleMap.get(strings[0].trim()));
+									tableInfo.setSourceSyspk(DbConnection.getModulePk(strings[0].trim()));
 									tableInfo.setTableCode(strings[1].trim());
 									if (strings[2].length() > 32) {
 										tableInfo.setTableName(strings[2].trim().substring(0, 32));
@@ -492,7 +492,7 @@ public class XLS2CSVmra implements HSSFListener {
 									tabMap.put(strings[1].trim(), tabId);
 									TableInfo tableInfo = new TableInfo();
 									tableInfo.setPk(tabId);
-									tableInfo.setSourceSyspk(moduleMap.get(strings[0].trim()));
+									tableInfo.setSourceSyspk(DbConnection.getModulePk(strings[0].trim()));
 									tableInfo.setTableCode(strings[1].trim());
 									if (strings[2].length() > 32) {
 										tableInfo.setTableName(strings[2].trim().substring(0, 32));
@@ -561,11 +561,11 @@ public class XLS2CSVmra implements HSSFListener {
 					br.close();
 					System.out.println(fileName + " Module amount:" + moduleList.size() + " table amount："
 							+ tableList.size() + " column amount: " + colList.size());
-					for (SysModule sModule : moduleList) {
-						// System.out.println(sModule.getInsSql());
+					/*for (SysModule sModule : moduleList) {
+						 System.out.println(sModule.getInsSql());
 						DbConnection.insertSysModule(sModule, DbConnection.getConn());
-						//ps.println(sModule.getInsSql());
-					}
+						ps.println(sModule.getInsSql());
+					}*/
 					for (TableInfo ti : tableList) {
 						// System.out.println(ti.getInsSql());
 						DbConnection.insertTableInfo(ti, DbConnection.getConn());
@@ -595,24 +595,30 @@ public class XLS2CSVmra implements HSSFListener {
 	}
 
 	public static void main(String[] args) throws Exception {
-		beforeProcess();
+		 //beforeProcess();
 		// step 1： convert excel to txt files
-		processExcels("F:\\work\\开发文档\\标准化文档\\");
+		 //processExcels("F:\\work\\开发文档\\标准化文档\\");
 
 		// step 2:
-		processTxt("F:\\work\\开发文档\\bzhcsv\\");
+		 //processTxt("F:\\work\\开发文档\\bzhcsv\\");
 
 		// step 3: 处理码表
-		 processDict("F:\\work\\开发文档\\bzhcsv\\数据标准化－码表.txt");
+		  processDict("F:\\work\\开发文档\\bzhcsv\\数据标准化－码表.txt");
 		 // 手工创建index on tb_column_info 和tb_dict 
 		 //update tb_column_info t1 set reserve = '1' where exists (select pk from tb_dict t2 where t1.pk = t2.col_pk);
 		 //alter table tb_column_info add index ciindex(pk);
+		 afterProcess();
 	}
-
-	private static void beforeProcess() {
-		String sql= "delete from tb_sysmodule";
+	
+	private static void afterProcess() {
+		String sql = "update tb_column_info t1 set reserve = '1' where exists (select pk from tb_dict t2 where t1.pk = t2.col_pk)";
 		DbConnection.exeSql(sql, DbConnection.getConn());
-		sql = "delete from tb_column_info";
+	}
+	
+	private static void beforeProcess() {
+		/*String sql= "delete from tb_sysmodule";
+		DbConnection.exeSql(sql, DbConnection.getConn());*/
+		String sql = "delete from tb_column_info";
 		DbConnection.exeSql(sql, DbConnection.getConn());
 		sql = "delete from tb_info";
 		DbConnection.exeSql(sql, DbConnection.getConn());
