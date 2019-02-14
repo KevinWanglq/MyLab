@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.hyls.model.ColumnInfo;
 import com.hyls.model.DictInfo;
+import com.hyls.model.ImageInfo;
 import com.hyls.model.SysModule;
 import com.hyls.model.TableInfo;
 
@@ -143,6 +144,44 @@ public class DbConnection {
 		return pk ;
 	}
 	
+	
+	public static int addImageInfo(List<ImageInfo> imageInfo, Connection conn) {
+		 int j = 0;
+		    PreparedStatement pstmt = null;
+		    ImageInfo column = null;
+		    String sql = "insert into imageinfo (pk,name,staff_no) values(?,?,?)";
+		    try {
+		    	pstmt = (PreparedStatement) conn.prepareStatement(sql);
+		    	for(int i=0;i<imageInfo.size();i++) {
+		    		column = imageInfo.get(i);
+			        pstmt.setString(1, column.getPk());
+			        pstmt.setString(2, column.getName());
+			        pstmt.setString(3, column.getCode());
+			        pstmt.addBatch();
+			        //every thousand ;
+			        if(i!=0&&i%1000==0) {
+			        	long begin =System.currentTimeMillis();
+			        	pstmt.executeBatch();
+			        	long end = System.currentTimeMillis();
+			        	System.out.println("1000 Batch cost "+(end-begin)/1000+" second");
+			        	pstmt.clearParameters();
+			        	pstmt.clearBatch();
+			        }
+		    	}
+		    	long begin =System.currentTimeMillis();
+		    	pstmt.executeBatch();
+	        	long end = System.currentTimeMillis();
+	        	System.out.println("Batch cost "+(end-begin)/1000+" second");
+		        pstmt.close();
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }finally {
+		    	releasePrep(pstmt);
+			}
+		    return j;
+		
+	}
+	
 	public static int addColumnInfo(List<ColumnInfo> columnList,Connection conn) {
 	    int j = 0;
 	    PreparedStatement pstmt = null;
@@ -163,7 +202,7 @@ public class DbConnection {
 		        pstmt.setString(9, column.getColDecl());
 		        pstmt.setInt(10, column.getOrderNo());
 		        pstmt.addBatch();
-		        //every one thousand ;
+		        //every thousand ;
 		        if(i!=0&&i%1000==0) {
 		        	long begin =System.currentTimeMillis();
 		        	pstmt.executeBatch();
